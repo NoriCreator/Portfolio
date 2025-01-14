@@ -1,5 +1,5 @@
 using UnityEngine;
-usingCommons;
+using Commons;
 using static MinoManagement.Mino;
 
 namespace MinoManagement
@@ -156,7 +156,7 @@ namespace MinoManagement
                 }
             }
 
-            return spawnObjectArray;
+            return spawnCubeArray;
         }
 
         private void MoveTetriMino(IntVector2 moveVector, int rotation)
@@ -187,8 +187,22 @@ namespace MinoManagement
 
         private void ReflectPlayTetriMinoOnField()
         {
-            DestroyObjectArray(PlayMinoObjectArray);
-            tetrisField.ReflectPlayTetriMinoOnField(playTetriMino.PlayTetr);
+            Mino[,] shape = playTetriMino.PlayTetriMino;
+            int posX = playTetriMino.PlayTetriMinoPosition.x;
+            int posY = playTetriMino.PlayTetriMinoPosition.y;
+            int height = shape.GetLength(0);
+            int width = shape.GetLength(1);
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if (shape[y, x].ThisMinoType != MinoType.None)
+                    {
+                        tetrisField.TetrisFieldArray[posY + y, posX + x].ThisMinoType = shape[y, x].ThisMinoType;
+                    }
+                }
+            }
         }
 
         private void DestroyObjectArray(GameObject[] destroyObjectArray)

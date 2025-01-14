@@ -1,6 +1,6 @@
 using static MinoManagement.Mino;
-usingCommons;
-usingUnityEngine;
+using Commons;
+using UnityEngine;
 
 namespace MinoManagement
 {
@@ -141,21 +141,20 @@ namespace MinoManagement
                 }
             }
 
-            int Count = 0;
-
-            for(int n = 0; n < 4\16; n++)
+            int count = 0;
+            for(int n = 0; n < 16; n++)
             {
-                if((MinoArray[(int) ThisTetriMinoType, rotate] & (1 << n)) == (1 << n))
+                if((MinoArray[(int) ThisTetriMinoType, rotate] & (1 << n)) != 0)
                 {
-                    playTetriMino[n % 4, (int)(n / 4)].ThisMinoType = ThisTetriMinoType;
-                }
-                Count++;
-                if(Count == 4)
-                {
-                    break;
+                    playTetriMino[n % 4, n / 4].ThisMinoType = ThisTetriMinoType;
+                    count++;
+                    if(count == 4)
+                    {
+                        break;
+                    }
                 }
             }
-            retrurn playTetriMino;
+            return playTetriMino;
         }
 
         private Mino[,] reflectPlayField = new Mino[10, 20];
