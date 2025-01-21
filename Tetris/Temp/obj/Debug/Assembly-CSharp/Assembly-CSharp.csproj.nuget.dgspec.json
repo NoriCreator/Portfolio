@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Unity_Games\\Tetris\\Assembly-CSharp.csproj": {}
+    "C:\\デスクトップ\\Portfolio\\Tetris\\Assembly-CSharp.csproj": {}
   },
   "projects": {
-    "D:\\Unity_Games\\Tetris\\Assembly-CSharp.csproj": {
+    "C:\\デスクトップ\\Portfolio\\Tetris\\Assembly-CSharp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Unity_Games\\Tetris\\Assembly-CSharp.csproj",
+        "projectUniqueName": "C:\\デスクトップ\\Portfolio\\Tetris\\Assembly-CSharp.csproj",
         "projectName": "Assembly-CSharp",
-        "projectPath": "D:\\Unity_Games\\Tetris\\Assembly-CSharp.csproj",
+        "projectPath": "C:\\デスクトップ\\Portfolio\\Tetris\\Assembly-CSharp.csproj",
         "packagesPath": "C:\\Users\\itowo\\.nuget\\packages\\",
-        "outputPath": "D:\\Unity_Games\\Tetris\\Temp\\obj\\Debug\\Assembly-CSharp\\",
+        "outputPath": "C:\\デスクトップ\\Portfolio\\Tetris\\Temp\\obj\\Debug\\Assembly-CSharp\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\itowo\\AppData\\Roaming\\NuGet\\NuGet.Config"
