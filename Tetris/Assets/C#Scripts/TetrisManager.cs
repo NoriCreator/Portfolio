@@ -6,6 +6,18 @@ namespace MinoManagement
 {
     public class MinoManager : MonoBehaviour
     {
+        private const int FieldWidth = 10;
+        private const int FieldHeight = 20;
+        private const int MinoSize = 4;
+        private const float DefaultDownSpeed = 1.0f;
+        private const float FastDownSpeed = 0.2f;
+        private const float StopTimeThreshold = 2.0f;
+        private const float SpawnOriginX = 3.0f;
+        private const float SpawnOriginY = 16.0f;
+        private const float SpawnOriginZ = 0.0f;
+        private const float MinoOffsetX = -4.5f;
+        private const float MinoOffsetY = -10.0f;
+
         private GameObject[] minoCubeTypeArray = new GameObject[7];
         [SerializeField] private GameObject I_Mino_Cube;
         [SerializeField] private GameObject O_Mino_Cube;
@@ -15,21 +27,43 @@ namespace MinoManagement
         [SerializeField] private GameObject J_Mino_Cube;
         [SerializeField] private GameObject L_Mino_Cube;
 
-        public Vector3 SpawnOrigin = new(3.0f, 16.0f, 0.0f);
+        public Vector3 SpawnOrigin { get; private set; } = new(SpawnOriginX, SpawnOriginY, SpawnOriginZ);
 
-        TetriMino playTetriMino;
-        public GameObject[] PlayMinoObjectArray { get; private set; } = new GameObject[4];
+        private TetriMino currentTetriMino;
+        public GameObject[] CurrentMinoObjects { get; private set; } = new GameObject[MinoSize];
 
-        TetrisField tetrisField = new();
-        public GameObject[] TetrisFieldObjectArray { get; private set; } = new GameObject[1000];
+        private TetrisField tetrisField = new();
+        public GameObject[] FieldObjects { get; private set; } = new GameObject[FieldWidth * FieldHeight];
 
-        [SerializeField] float downSpeedNomal = 1.0f;
-        [SerializeField] float downSpeedFast = 0.2f;
+        private float normalDownSpeed = DefaultDownSpeed;
+        private float fastDownSpeed = FastDownSpeed;
 
-        private float timeDownSpeedCount = 0f;
-        private float timeDownStopCount = 0f;
+        private float downSpeedCounter = 0f;
+        private float stopCounter = 0f;
 
         void Awake()
+        {
+            InitializeMinoCubeTypeArray();
+        }
+
+        void Start()
+        {
+            SpawnNewTetriMino();
+        }
+
+        void Update()
+        {
+            HandleTetriMinoMovement();
+
+            if (ShouldApplyTetriMinoOnField())
+            {
+                ApplyTetriMinoOnField();
+                SpawnFieldObjects();
+                SpawnNewTetriMino();
+            }
+        }
+
+        private void InitializeMinoCubeTypeArray()
         {
             minoCubeTypeArray[0] = I_Mino_Cube;
             minoCubeTypeArray[1] = O_Mino_Cube;
@@ -39,116 +73,97 @@ namespace MinoManagement
             minoCubeTypeArray[5] = J_Mino_Cube;
             minoCubeTypeArray[6] = L_Mino_Cube;
         }
-        void Start()
+
+        private void SpawnNewTetriMino()
         {
-            InstantTetriMino();
+            currentTetriMino = new TetriMino((MinoType)Random.Range(0, 7));
+            CurrentMinoObjects = SpawnTetriMinoObjects();
         }
 
-        void Update()
+        private void HandleTetriMinoMovement()
         {
-            TetriMinoController();
-
-            if(IsCheckReflectOnField())
+            downSpeedCounter += Time.deltaTime;
+            if (downSpeedCounter >= normalDownSpeed)
             {
-                ReflectPlayTetriMinoOnField();
-                SpawnFieldObject();
-                InstantTetriMino();
+                downSpeedCounter = 0f;
+                MoveTetriMino(new IntVector2(0, -1), 0);
             }
-        }
 
-        private void InstantTetriMino()
-        {
-            playTetriMino = new TetriMino((MinoType)Random.Range(0, 7));
-            PlayMinoObjectArray = SpawnTetriMinoObject();
-        }
+            IntVector2 moveVector = GetMoveVector();
+            int rotation = GetRotation();
 
-        private void NaturalMoveDown()
-        {
-            timeDownSpeedCount += Time.deltaTime;
-            if(timeDownSpeedCount >= downSpeedNomal)
+            if (moveVector.x != 0 || moveVector.y != 0 || rotation != 0)
             {
-                timeDownSpeedCount = 0f;
-                MoveTetriMino(new(0, -1), 0);
+                MoveTetriMino(moveVector, rotation);
             }
         }
 
-        private void TetriMinoController()
+        private IntVector2 GetMoveVector()
         {
-            NaturalMoveDown();
-            
-            int rotate = 0;
-            IntVector2 moveVector;
-            moveVector.x = 0;
-            moveVector.y = 0;
+            IntVector2 moveVector = new(0, 0);
 
-            bool isMove = false;
-
-            if(Input.GetKeyDown(KeyCode.Space))
+            if (Input.GetKeyDown(KeyCode.A))
             {
-                rotate += 1;
-                isMove = true;
+                moveVector.x = -1;
             }
-            if(Input.GetKeyDown(KeyCode.Return))
+            if (Input.GetKeyDown(KeyCode.D))
             {
-                rotate += -1;
-                isMove = true;
+                moveVector.x = 1;
             }
-            if(Input.GetKeyDown(KeyCode.A))
+            if (Input.GetKey(KeyCode.S))
             {
-                moveVector.x += -1;
-                isMove = true;
-            }
-            if(Input.GetKeyDown(KeyCode.D))
-            {
-                moveVector.x += 1;
-                isMove = true;
-            }
-            if(Input.GetKeyDown(KeyCode.S))
-            {
-                if(timeDownSpeedCount > downSpeedFast)
+                if (downSpeedCounter > fastDownSpeed)
                 {
-                    timeDownSpeedCount = 0f;
-
-                    moveVector.y += -1;
-                    isMove = true;
+                    downSpeedCounter = 0f;
+                    moveVector.y = -1;
                 }
             }
 
-            if(isMove)
+            return moveVector;
+        }
+
+        private int GetRotation()
+        {
+            int rotation = 0;
+
+            if (Input.GetKeyDown(KeyCode.Space))
             {
-                MoveTetriMino(moveVector, rotate);
+                rotation = -1;
             }
+            if (Input.GetKeyDown(KeyCode.Return))
+            {
+                rotation = 1;
+            }
+
+            return rotation;
         }
 
         private GameObject SpawnMinoObject(Vector3 position, MinoType minoType)
         {
-            GameObject spawnObject = Instantiate(minoCubeTypeArray[(int)minoType], position, Quaternion.identity);
-
-            return spawnObject;
+            return Instantiate(minoCubeTypeArray[(int)minoType], position, Quaternion.identity);
         }
 
-        private GameObject[] spawnCubeArray = new GameObject[4];
-
-        private GameObject[] SpawnTetriMinoObject()
+        private GameObject[] SpawnTetriMinoObjects()
         {
+            GameObject[] spawnCubeArray = new GameObject[MinoSize];
             int count = 0;
 
-            for(int raw = 0; raw < playTetriMino.PlayTetriMino.GetLength(0); raw++)
+            for (int row = 0; row < currentTetriMino.PlayTetriMino.GetLength(0); row++)
             {
-                for(int col = 0; col < playTetriMino.PlayTetriMino.GetLength(1); col++)
+                for (int col = 0; col < currentTetriMino.PlayTetriMino.GetLength(1); col++)
                 {
-                    if(playTetriMino.PlayTetriMino[raw, col].ThisMinoType != MinoType.None)
+                    if (currentTetriMino.PlayTetriMino[row, col].ThisMinoType != MinoType.None)
                     {
-                        spawnCubeArray[count] = SpawnMinoObject(new Vector3(-4.5f + raw, -10.0f + col) + new Vector3(playTetriMino.PlayTetriMinoPosition.x, playTetriMino.PlayTetriMinoPosition.y, 0), playTetriMino.ThisTetriMinoType);
+                        spawnCubeArray[count] = SpawnMinoObject(new Vector3(MinoOffsetX + row, MinoOffsetY + col) + new Vector3(currentTetriMino.PlayTetriMinoPosition.x, currentTetriMino.PlayTetriMinoPosition.y, 0), currentTetriMino.ThisTetriMinoType);
                         count++;
-                        if(count == 4)
+                        if (count == MinoSize)
                         {
                             break;
                         }
                     }
                 }
-                
-                if(count == 4)
+
+                if (count == MinoSize)
                 {
                     break;
                 }
@@ -159,89 +174,89 @@ namespace MinoManagement
 
         private void MoveTetriMino(IntVector2 moveVector, int rotation)
         {
-            DestroyObjectArray(PlayMinoObjectArray);
-            playTetriMino.TetriMinoReflectValue(moveVector, rotation, tetrisField.TetrisFieldArray);
-            PlayMinoObjectArray = SpawnTetriMinoObject();
+            DestroyObjects(CurrentMinoObjects);
+            currentTetriMino.ApplyTetriMino(moveVector, rotation, tetrisField.FieldArray);
+            CurrentMinoObjects = SpawnTetriMinoObjects();
         }
 
         private int lastYPosition = int.MinValue;
 
-        private bool IsCheckReflectOnField()
+        private bool ShouldApplyTetriMinoOnField()
         {
-            int currentYPosition = playTetriMino.PlayTetriMinoPosition.y;
-            if(lastYPosition == currentYPosition)
+            int currentYPosition = currentTetriMino.PlayTetriMinoPosition.y;
+            if (lastYPosition == currentYPosition)
             {
-                timeDownStopCount += Time.deltaTime;
-                if(timeDownStopCount >= 2.0f)
+                stopCounter += Time.deltaTime;
+                if (stopCounter >= StopTimeThreshold)
                 {
                     return true;
                 }
             }
-            else {timeDownStopCount = 0f;}
+            else
+            {
+                stopCounter = 0f;
+            }
 
             lastYPosition = currentYPosition;
             return false;
         }
 
-        private void ReflectPlayTetriMinoOnField()
+        private void ApplyTetriMinoOnField()
         {
-            DestroyObjectArray(PlayMinoObjectArray);
-            Mino[,] shape = playTetriMino.PlayTetriMino;
-            int posX = playTetriMino.PlayTetriMinoPosition.x;
-            int posY = playTetriMino.PlayTetriMinoPosition.y;
-            int height = shape.GetLength(0);
-            int width = shape.GetLength(1);
+            DestroyObjects(CurrentMinoObjects);
+            int posX = currentTetriMino.PlayTetriMinoPosition.x;
+            int posY = currentTetriMino.PlayTetriMinoPosition.y;
 
-            for (int y = 0; y < height; y++)
+            for (int row = 0; row < currentTetriMino.PlayTetriMino.GetLength(0); row++)
             {
-                for (int x = 0; x < width; x++)
+                for (int col = 0; col < currentTetriMino.PlayTetriMino.GetLength(1); col++)
                 {
-                    if (shape[y, x].ThisMinoType != MinoType.None)
+                    if (currentTetriMino.PlayTetriMino[row, col].ThisMinoType != MinoType.None)
                     {
-                        int fieldY = posY + y;
-                        int fieldX = posX + x;
-                        if (fieldY >= 0 && fieldY < tetrisField.TetrisFieldArray.GetLength(1) && fieldX >= 0 && fieldX < tetrisField.TetrisFieldArray.GetLength(0))
+                        int fieldX = posX + row;
+                        int fieldY = posY + col;
+                        if (fieldX >= 0 && fieldX < FieldWidth && fieldY >= 0 && fieldY < FieldHeight)
                         {
-                            tetrisField.TetrisFieldArray[fieldX, fieldY].ThisMinoType = shape[y, x].ThisMinoType;
+                            tetrisField.FieldArray[fieldX, fieldY].ThisMinoType = currentTetriMino.PlayTetriMino[row, col].ThisMinoType;
                         }
                     }
                 }
             }
+
+            tetrisField.ClearFullLines();
         }
 
-        private void DestroyObjectArray(GameObject[] destroyObjectArray)
+        private void DestroyObjects(GameObject[] objects)
         {
-            foreach(GameObject obj in destroyObjectArray)
+            foreach (GameObject obj in objects)
             {
-                if(obj != null)
+                if (obj != null)
                 {
                     Destroy(obj);
                 }
             }
         }
 
-        private void SpawnFieldObject()
+        private void SpawnFieldObjects()
         {
-            if(TetrisFieldObjectArray != null)
+            if (FieldObjects != null)
             {
-                DestroyObjectArray(TetrisFieldObjectArray);
+                DestroyObjects(FieldObjects);
             }
 
             int count = 0;
 
-            for(int raw = 0; raw < tetrisField.TetrisFieldArray.GetLength(0); raw++)
+            for (int row = 0; row < FieldWidth; row++)
             {
-                for(int col = 0; col < tetrisField.TetrisFieldArray.GetLength(1); col++)
+                for (int col = 0; col < FieldHeight; col++)
                 {
-                    if(tetrisField.TetrisFieldArray[raw, col].ThisMinoType != MinoType.None)
+                    if (tetrisField.FieldArray[row, col].ThisMinoType != MinoType.None)
                     {
-                        TetrisFieldObjectArray[count] = SpawnMinoObject(new Vector3(-4.5f + raw, -10.0f + col), tetrisField.TetrisFieldArray[raw, col].ThisMinoType);
+                        FieldObjects[count] = SpawnMinoObject(new Vector3(MinoOffsetX + row, MinoOffsetY + col), tetrisField.FieldArray[row, col].ThisMinoType);
                         count++;
                     }
                 }
             }
-
-            return;
         }
     }
 }

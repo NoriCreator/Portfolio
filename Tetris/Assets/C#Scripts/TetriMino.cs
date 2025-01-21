@@ -26,6 +26,14 @@ namespace MinoManagement
 
     public class TetriMino
     {
+        private const int FieldWidth = 10;
+        private const int FieldHeight = 20;
+        private const int MinoSize = 4;
+        private const int MaxRotation = 4;
+        private const int MinRotation = 0;
+        private const int InitialRotation = 0;
+        private const int MaxApplyCount = 4;
+
         public MinoType ThisTetriMinoType { get; set; }
 
         public int MinoRotation { get; set; }
@@ -34,15 +42,15 @@ namespace MinoManagement
 
         public IntVector2 PlayTetriMinoPosition { get; set; }
 
-        public Mino[,] PlayTetriMinoAboveField { get; set; } = new Mino[10, 20];
+        public Mino[,] PlayTetriMinoAboveField { get; set; } = new Mino[FieldWidth, FieldHeight];
 
-        public TetriMino(MinoType MinoType)
+        public TetriMino(MinoType minoType)
         {
-            ThisTetriMinoType = MinoType;
-            MinoRotation = 0;
+            ThisTetriMinoType = minoType;
+            MinoRotation = InitialRotation;
             SetSpawnPosition();
-            PlayTetriMino = ReflectPlayTetriMino(MinoRotation);
-            PlayTetriMinoAboveField = ReflectPlayFieldFunc(PlayTetriMino, PlayTetriMinoPosition);
+            PlayTetriMino = ApplyPlayTetriMino(MinoRotation);
+            PlayTetriMinoAboveField = ApplyPlayField(PlayTetriMino, PlayTetriMinoPosition);
         }
 
         private int[,] MinoArray { get; } = new int[7, 4]
@@ -98,56 +106,39 @@ namespace MinoManagement
 
         private void SetSpawnPosition()
         {
-            if(ThisTetriMinoType == MinoType.I_Mino)
+            PlayTetriMinoPosition = ThisTetriMinoType switch
             {
-                PlayTetriMinoPosition = new IntVector2(3, 17);
-            }
-            else if(ThisTetriMinoType == MinoType.O_Mino)
-            {
-                PlayTetriMinoPosition = new IntVector2(4, 18);
-            }
-            else if(ThisTetriMinoType == MinoType.T_Mino)
-            {
-                PlayTetriMinoPosition = new IntVector2(4, 18);
-            }
-            else if(ThisTetriMinoType == MinoType.S_Mino)
-            {
-                PlayTetriMinoPosition = new IntVector2(4, 18);
-            }
-            else if(ThisTetriMinoType == MinoType.Z_Mino)
-            {
-                PlayTetriMinoPosition = new IntVector2(4, 18);
-            }
-            else if(ThisTetriMinoType == MinoType.J_Mino)
-            {
-                PlayTetriMinoPosition = new IntVector2(4, 17);
-            }
-            else if(ThisTetriMinoType == MinoType.L_Mino)
-            {
-                PlayTetriMinoPosition = new IntVector2(4, 17);
-            }
+                MinoType.I_Mino => new IntVector2(3, 17),
+                MinoType.O_Mino => new IntVector2(4, 18),
+                MinoType.T_Mino => new IntVector2(4, 18),
+                MinoType.S_Mino => new IntVector2(4, 18),
+                MinoType.Z_Mino => new IntVector2(4, 18),
+                MinoType.J_Mino => new IntVector2(4, 17),
+                MinoType.L_Mino => new IntVector2(4, 17),
+                _ => new IntVector2(0, 0)
+            };
         }
 
-        private Mino[,] ReflectPlayTetriMino(int rotate)
+        private Mino[,] ApplyPlayTetriMino(int rotate)
         {
-            Mino[,] playTetriMino = new Mino[4, 4];
+            Mino[,] playTetriMino = new Mino[MinoSize, MinoSize];
             int minoNum = GetMinoNum();
-            for(int i = 0; i < 4; i++)
+            for (int i = 0; i < MinoSize; i++)
             {
-                for(int j = 0; j < 4; j++)
+                for (int j = 0; j < MinoSize; j++)
                 {
                     playTetriMino[i, j] = new Mino();
                 }
             }
 
             int count = 0;
-            for(int n = 0; n < 16; n++)
+            for (int n = 0; n < MinoSize * MinoSize; n++)
             {
-                if((MinoArray[(int) ThisTetriMinoType, rotate] & (1 << n)) != 0)
+                if ((MinoArray[(int) ThisTetriMinoType, rotate] & (1 << n)) != 0)
                 {
-                    playTetriMino[n % 4, n / 4].ThisMinoType = ThisTetriMinoType;
+                    playTetriMino[n % MinoSize, n / MinoSize].ThisMinoType = ThisTetriMinoType;
                     count++;
-                    if(count == 4)
+                    if (count == MinoSize)
                     {
                         break;
                     }
@@ -156,52 +147,52 @@ namespace MinoManagement
             return playTetriMino;
         }
 
-        private Mino[,] reflectPlayField = new Mino[10, 20];
+        private Mino[,] applyPlayField = new Mino[FieldWidth, FieldHeight];
 
-        private Mino[,] ReflectPlayFieldFunc(Mino[,] playTetriMino, IntVector2 position)
+        private Mino[,] ApplyPlayField(Mino[,] playTetriMino, IntVector2 position)
         {
-            int countReflect = 0;
-            for(int row = 0; row < reflectPlayField.GetLength(0); row++)
+            int countApply = 0;
+            for (int row = 0; row < FieldWidth; row++)
             {
-                for(int col = 0; col < reflectPlayField.GetLength(1); col++)
+                for (int col = 0; col < FieldHeight; col++)
                 {
-                    reflectPlayField[row, col] = new();
+                    applyPlayField[row, col] = new();
                 }
             }
 
-            for(int row = 0; row < playTetriMino.GetLength(0); row++)
+            for (int row = 0; row < playTetriMino.GetLength(0); row++)
             {
-                for(int col = 0; col < playTetriMino.GetLength(1); col++)
+                for (int col = 0; col < playTetriMino.GetLength(1); col++)
                 {
-                    if(playTetriMino[row, col].ThisMinoType != MinoType.None)
+                    if (playTetriMino[row, col].ThisMinoType != MinoType.None)
                     {
-                        if(position.x + row >= 0 && position.x + row < reflectPlayField.GetLength(0) && position.y + col >= 0 && position.y + col < reflectPlayField.GetLength(1))
+                        if (position.x + row >= 0 && position.x + row < FieldWidth && position.y + col >= 0 && position.y + col < FieldHeight)
                         {
-                            reflectPlayField[row + position.x, col + position.y].ThisMinoType = ThisTetriMinoType;
+                            applyPlayField[row + position.x, col + position.y].ThisMinoType = ThisTetriMinoType;
                             
                             if(ThisTetriMinoType != MinoType.None)
                             {
-                                countReflect++;
+                                countApply++;
                             }
 
-                            if(countReflect == 4)
+                            if(countApply == MaxApplyCount)
                             {
-                                return reflectPlayField;
+                                return applyPlayField;
                             }
                         }
                     }
                 }
             }
 
-            return reflectPlayField;
+            return applyPlayField;
         }
 
         private int tempMinoRotation;
-        private Mino[,] tempPlayTetriMino = new Mino[4, 4];
-        private Mino[,] tempPlayField = new Mino[10, 20];
+        private Mino[,] tempPlayTetriMino = new Mino[MinoSize, MinoSize];
+        private Mino[,] tempPlayField = new Mino[FieldWidth, FieldHeight];
         private IntVector2 tempPlayTetriMinoPosition = new();
 
-        public void TetriMinoReflectValue(IntVector2 moveVector, int rotation, Mino[,] tetrisField)
+        public void ApplyTetriMino(IntVector2 moveVector, int rotation, Mino[,] tetrisField)
         {
             tempMinoRotation = MinoRotation;
             tempPlayTetriMinoPosition = PlayTetriMinoPosition;
@@ -210,17 +201,17 @@ namespace MinoManagement
             tempPlayTetriMinoPosition.y += moveVector.y;
             tempMinoRotation += rotation;
 
-            if(tempMinoRotation == 4)
+            if(tempMinoRotation == MaxRotation)
             {
-                tempMinoRotation = 0;
+                tempMinoRotation = MinRotation;
             }
             else if(tempMinoRotation == -1)
             {
-                tempMinoRotation = 3;
+                tempMinoRotation = MaxRotation - 1;
             }
 
-            tempPlayTetriMino = ReflectPlayTetriMino(tempMinoRotation);
-            tempPlayField = ReflectPlayFieldFunc(tempPlayTetriMino, tempPlayTetriMinoPosition);
+            tempPlayTetriMino = ApplyPlayTetriMino(tempMinoRotation);
+            tempPlayField = ApplyPlayField(tempPlayTetriMino, tempPlayTetriMinoPosition);
 
             int count = 0;
 
@@ -228,18 +219,21 @@ namespace MinoManagement
             {
                 for(int col = 0; col < tempPlayField.GetLength(1); col++)
                 {
-                    if(tempPlayField[row, col].ThisMinoType != MinoType.None && tetrisField[row, col].ThisMinoType != MinoType.None)
+                    if(tempPlayField[row, col].ThisMinoType != MinoType.None && tetrisField[row, col].ThisMinoType == MinoType.None)
                     {
-                        count++;
-                    }
+                        if(row >= 0 && row < tempPlayField.GetLength(0) && col >= 0 && col < tempPlayField.GetLength(1))
+                        {
+                            count++;
+                        }
 
-                    if(count == 4)
-                    {
-                        PlayTetriMinoPosition = tempPlayTetriMinoPosition;
-                        MinoRotation = tempMinoRotation;
-                        PlayTetriMino = tempPlayTetriMino;
-                        PlayTetriMinoAboveField = tempPlayField;
-                        return;
+                        if(count == MaxApplyCount)
+                        {
+                            PlayTetriMinoPosition = tempPlayTetriMinoPosition;
+                            MinoRotation = tempMinoRotation;
+                            PlayTetriMino = tempPlayTetriMino;
+                            PlayTetriMinoAboveField = tempPlayField;
+                            return;
+                        }
                     }
                 }
             }

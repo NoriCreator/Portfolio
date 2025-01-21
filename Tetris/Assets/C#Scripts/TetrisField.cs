@@ -5,7 +5,10 @@ namespace MinoManagement
 {
     public class TetrisField
     {
-        public Mino[,] TetrisFieldArray { get; private set; } = new Mino[10, 20];
+        private const int FieldWidth = 10;
+        private const int FieldHeight = 20;
+
+        public Mino[,] FieldArray { get; private set; } = new Mino[FieldWidth, FieldHeight];
 
         public TetrisField()
         {
@@ -14,51 +17,33 @@ namespace MinoManagement
 
         private void InitializeField()
         {
-            for (int row = 0; row < TetrisFieldArray.GetLength(0); row++)
+            for (int row = 0; row < FieldWidth; row++)
             {
-                for (int col = 0; col < TetrisFieldArray.GetLength(1); col++)
+                for (int col = 0; col < FieldHeight; col++)
                 {
-                    TetrisFieldArray[row, col] = new Mino();
+                    FieldArray[row, col] = new Mino();
                 }
             }
         }
 
-        public void ReflectPlayTetriMinoOnField(Mino[,] playTetriMino, IntVector2 position)
+        public void ClearFullLines()
         {
-            int rows = playTetriMino.GetLength(0);
-            int cols = playTetriMino.GetLength(1);
-
-            for (int row = 0; row < rows; row++)
-            {
-                for (int col = 0; col < cols; col++)
-                {
-                    if (playTetriMino[row, col].ThisMinoType != MinoType.None)
-                    {
-                        TetrisFieldArray[position.x + row, position.y + col].ThisMinoType = playTetriMino[row, col].ThisMinoType;
-                    }
-                }
-            }
-            ClearFullLines();
-        }
-
-        private void ClearFullLines()
-        {
-            for (int col = 0; col < TetrisFieldArray.GetLength(1); col++)
+            for (int col = 0; col < FieldHeight; col++)
             {
                 if (IsLineFull(col))
                 {
                     ClearLine(col);
                     MoveDownLinesAbove(col);
-                    col--; // Check the same line again after moving down
+                    col--;
                 }
             }
         }
 
         private bool IsLineFull(int col)
         {
-            for (int row = 0; row < TetrisFieldArray.GetLength(0); row++)
+            for (int row = 0; row < FieldWidth; row++)
             {
-                if (TetrisFieldArray[row, col].ThisMinoType == MinoType.None)
+                if (FieldArray[row, col].ThisMinoType == MinoType.None)
                 {
                     return false;
                 }
@@ -68,26 +53,25 @@ namespace MinoManagement
 
         private void ClearLine(int col)
         {
-            for (int row = 0; row < TetrisFieldArray.GetLength(0); row++)
+            for (int row = 0; row < FieldWidth; row++)
             {
-                TetrisFieldArray[row, col].ThisMinoType = MinoType.None;
+                FieldArray[row, col].ThisMinoType = MinoType.None;
             }
         }
 
         private void MoveDownLinesAbove(int clearedLine)
         {
-            for (int col = clearedLine; col < TetrisFieldArray.GetLength(1) - 1; col++)
+            for (int col = clearedLine; col < FieldHeight - 1; col++)
             {
-                for (int row = 0; row < TetrisFieldArray.GetLength(0); row++)
+                for (int row = 0; row < FieldWidth; row++)
                 {
-                    TetrisFieldArray[row, col].ThisMinoType = TetrisFieldArray[row, col + 1].ThisMinoType;
+                    FieldArray[row, col].ThisMinoType = FieldArray[row, col + 1].ThisMinoType;
                 }
             }
 
-            // Clear the top line
-            for (int row = 0; row < TetrisFieldArray.GetLength(0); row++)
+            for (int row = 0; row < FieldWidth; row++)
             {
-                TetrisFieldArray[row, TetrisFieldArray.GetLength(1) - 1].ThisMinoType = MinoType.None;
+                FieldArray[row, FieldHeight - 1].ThisMinoType = MinoType.None;
             }
         }
     }
