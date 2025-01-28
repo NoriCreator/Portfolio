@@ -120,22 +120,19 @@ namespace MinoManagement
             downSpeedCounter = 0f;
             stopCounter = 0f;
             
-            // 現在のテトリミノを次のテトリミノに切り替え
             currentTetriMino = nextTetriMino;
             CurrentMinoObjects = SpawnTetriMinoObjects(currentTetriMino, MinoOffsetX, MinoOffsetY);
 
-            // 次のテトリミノを次々のテトリミノに切り替え
             nextTetriMino = next2TetriMino;
             DestroyObjects(NextTetriMinoObjects);
             NextTetriMinoObjects = SpawnTetriMinoObjects(nextTetriMino, NextOffsetX, NextOffsetY);
 
-            // 次々のテトリミノを新しいランダムなテトリミノに更新
             next2TetriMino = GetRandomTetriMino();
             DestroyObjects(Next2TetriMinoObjects);
             Next2TetriMinoObjects = SpawnTetriMinoObjects(next2TetriMino, Next2OffsetX, Next2OffsetY);
         }
 
-        private void HoldTetriMino() // ホールド処理
+        private void HoldTetriMino()
         {
             DestroyObjects(CurrentMinoObjects);
 
@@ -346,7 +343,7 @@ namespace MinoManagement
             }
         }
 
-        private bool IsFinishGame() // 終了処理
+        private bool IsFinishGame()
         {
             for (int row = 3; row < 7; row++)
             {
@@ -362,7 +359,7 @@ namespace MinoManagement
             return false;
         }
 
-        private TetriMino GetRandomTetriMino() // ランダムなテトリミノを取得
+        private TetriMino GetRandomTetriMino()
         {
             int minCount = int.MaxValue;
             for (int i = 0; i < spawnCount.Length; i++)
@@ -388,7 +385,7 @@ namespace MinoManagement
             return new TetriMino((MinoType)chosenIndex);
         }
 
-        private void SetNextTetriMino() // 次のテトリミノを表示
+        private void SetNextTetriMino()
         {
             if (nextTetriMino == null)
             {
@@ -401,7 +398,7 @@ namespace MinoManagement
             }
         }
 
-        private void SetTetriMinoImmediately() // テトリミノを即座に設置
+        private void SetTetriMinoImmediately()
         {
             while (!ShouldApplyTetriMinoOnField())
             {
