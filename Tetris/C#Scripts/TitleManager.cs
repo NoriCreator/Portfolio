@@ -8,9 +8,8 @@ public class TitleManager : MonoBehaviour
         UnityCommonsFunc.EndGame();
     }
 
-    // OnApplicationQuitが呼ばれた際の処理
     void OnApplicationQuit()
     {
-        Application.Quit(); // アプリを終了する
+        Application.Quit();
     }
 }
