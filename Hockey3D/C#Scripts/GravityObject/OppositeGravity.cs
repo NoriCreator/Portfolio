@@ -5,6 +5,6 @@ public class OppositeGravity : GravityObject
 {
     public override Vector3 GetGravityDirection(Vector3 characterPosition)
     {
-        return (transform.position - characterPosition).normalized * gravityStrength;
+        return (characterPosition - transform.position).normalized * gravityStrength;
     }
 }

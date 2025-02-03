@@ -5,6 +5,6 @@ public class CenterGravity : GravityObject
 {
     public override Vector3 GetGravityDirection(Vector3 characterPosition)
     {
-        return (characterPosition - transform.position).normalized;
+        return (transform.position - characterPosition).normalized;
     }
 }
