@@ -7,7 +7,7 @@ public class AngleGravity : GravityObject
 
     public override Vector3 GetGravityDirection(Vector3 characterPosition)
     {
-        return gravityDirection.normalized * gravityStrength;
+        return gravityDirection.normalized;
     }
 
     private void OnDrowGizmos()

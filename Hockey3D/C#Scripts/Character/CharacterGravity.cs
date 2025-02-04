@@ -6,37 +6,60 @@ public class CharacterGravity : MonoBehaviour
 {
     private List<GravityObject> activeGravities = new List<GravityObject>();
     private Vector3 currentGravityDirection;
-    private float originalGravity;
+    private Rigidbody rb;
+    
+    [SerializeField] private float rotationSpeed = 1.0f;
 
     private void Start()
     {
-        originalGravity = Physics.gravity.y;
-        currentGravityDirection = Vector3.up * originalGravity;
+        this.tag = "Character";
+        rb = GetComponent<Rigidbody>();
+        rb.useGravity = false;
+        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+
+        currentGravityDirection = Vector3.down;
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
-        if(activeGravities.Count > 0)
+        UpdateGravity();
+        ApplyGravityForce();
+        SmoothRotateToGravity();
+    }
+
+    private void UpdateGravity()
+    {
+        if (activeGravities.Count > 0)
         {
             var highestPriorityGravity = activeGravities.OrderByDescending(g => g.priority).First();
             currentGravityDirection = highestPriorityGravity.GetGravityDirection(transform.position);
-            Physics.gravity = currentGravityDirection;
         }
         else
         {
-            currentGravityDirection = Vector3.up * originalGravity;
-            Physics.gravity = currentGravityDirection;
+            currentGravityDirection = Vector3.down;
         }
     }
 
-    // AddGravity メソッドの修正
-    public void AddGravity(GravityObject gravityObject)  // メソッド名を修正
+    private void ApplyGravityForce()
     {
-        activeGravities.Add(gravityObject);
+        rb.AddForce(currentGravityDirection * rb.mass, ForceMode.Acceleration);
     }
 
-    // RemoveGravity メソッド
-    public void RemoveGravity(GravityObject gravityObject)  // 必要なメソッドを追加
+    private void SmoothRotateToGravity()
+    {
+        Quaternion targetRotation = Quaternion.LookRotation(Vector3.Cross(transform.right, -currentGravityDirection), -currentGravityDirection);
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
+    }
+
+    public void AddGravity(GravityObject gravityObject)
+    {
+        if (!activeGravities.Contains(gravityObject))
+        {
+            activeGravities.Add(gravityObject);
+        }
+    }
+
+    public void RemoveGravity(GravityObject gravityObject)
     {
         activeGravities.Remove(gravityObject);
     }
